@@ -1,0 +1,28 @@
+{
+  "name": "chatbot-rag-tiendapepe",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "db": "docker compose up -d --wait",
+    "indexar": "tsx indexar.ts",
+    "chat": "tsx chatbot.ts",
+    "tui": "tsx tui.tsx",
+    "evaluar": "tsx evaluar.ts",
+    "test": "tsx --test metrics.test.ts bm25.test.ts",
+    "similitud": "tsx similitud.ts"
+  },
+  "dependencies": {
+    "dotenv": "^18.0.9",
+    "ink": "^8.0.0",
+    "ink-text-input": "^6.0.0",
+    "openai": "^7.45.1",
+    "pg": "^8.23.1",
+    "react": "^19.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "@types/pg": "^8.23.1",
+    "@types/react": "^19.3.0",
+    "tsx": "^4.23.15"
+  }
+}

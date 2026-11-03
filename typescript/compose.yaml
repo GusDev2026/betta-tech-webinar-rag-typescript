@@ -1,0 +1,22 @@
+# Postgres con la extensión pgvector: aquí se guardan los fragmentos y sus embeddings.
+# Arrancar: docker compose up -d     Parar: docker compose down     Borrar datos: docker compose down -v
+name: tiendapepe-rag
+
+services:
+  db:
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_USER: rag
+      POSTGRES_PASSWORD: rag
+      POSTGRES_DB: rag
+    ports:
+      - "5433:5432" # 5433 en tu máquina, para no chocar con un Postgres que ya tengas
+    volumes:
+      - datos:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rag -d rag"]
+      interval: 2s
+      retries: 15
+
+volumes:
+  datos:
