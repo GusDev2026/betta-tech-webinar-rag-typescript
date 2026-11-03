@@ -19,10 +19,10 @@ import { addCosts, costInEuros, formatEuros, previewVector } from "./log.ts";
 
 const openai = new OpenAI(); // lee OPENAI_API_KEY y OPENAI_BASE_URL del entorno
 
-// Alias del servicio del curso: "fast" (rápido y barato) o "smart" (más capaz).
-export const CHAT_MODEL = process.env.MODELO ?? "fast";
+// Modelos de OpenAI por defecto; con otro proveedor, cámbialos en el .env.
+export const CHAT_MODEL = process.env.MODELO ?? "gpt-5-mini";
 // Tiene que ser el mismo modelo con el que se indexó.
-export const EMBEDDING_MODEL = process.env.MODELO_EMBEDDING ?? "embed";
+export const EMBEDDING_MODEL = process.env.MODELO_EMBEDDING ?? "text-embedding-3-small";
 
 const SYSTEM_PROMPT = `Eres el asistente de atención al cliente de TiendaPepe, una tienda online.
 Responde solo con la información del contexto que te doy, en español y en pocas frases.
@@ -97,8 +97,8 @@ const secondsSince = (start: number) => (performance.now() - start) / 1000;
 /** El embedding de un texto y lo que ha costado calcularlo. */
 async function embed(text: string): Promise<{ vector: number[]; cost: number | null }> {
   // withResponse() da también las cabeceras HTTP, donde viene el coste.
-  // encoding_format "float": sin esto, la librería pide base64 y el servicio del
-  // curso no lo devuelve en el formato que ella espera.
+  // encoding_format "float": sin esto, la librería pide base64 y algunos proxies
+  // compatibles con OpenAI no lo devuelven en el formato que ella espera.
   const { data: response, response: http } = await openai.embeddings
     .create({ model: EMBEDDING_MODEL, input: text, encoding_format: "float" })
     .withResponse();

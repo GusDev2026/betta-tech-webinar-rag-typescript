@@ -18,8 +18,9 @@ export function previewText(text: string, length = 70): string {
 /** Segundos desde un instante, con un decimal: "0.8 s". */
 export const elapsed = (start: number): string => `${((performance.now() - start) / 1000).toFixed(1)} s`;
 
-// El servicio del curso (LiteLLM) informa del coste de cada petición, en dólares,
-// en la cabecera x-litellm-response-cost. Lo pasamos a euros con este tipo de cambio.
+// Los proxies LiteLLM informan del coste de cada petición, en dólares, en la
+// cabecera x-litellm-response-cost. Lo pasamos a euros con este tipo de cambio.
+// La API de OpenAI no envía esa cabecera: entonces se muestra "coste no informado".
 const USD_TO_EUR = Number(process.env.USD_A_EUR ?? "0.86");
 
 /** Coste en euros de una petición, o null si el servicio no lo informa. */

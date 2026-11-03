@@ -7,9 +7,8 @@
  * Requisitos:
  *   npm install
  *   npm run db          (arranca Postgres con pgvector en Docker)
- *   Un archivo .env con:
- *     OPENAI_API_KEY=<tu clave del curso>
- *     OPENAI_BASE_URL=https://ai.commitacademy.io/v1
+ *   Un archivo .env con tu clave (copia .env.example):
+ *     OPENAI_API_KEY=sk-...
  *
  * Ejecutar:
  *   npm run indexar
@@ -24,8 +23,7 @@ import { addCosts, costInEuros, elapsed, formatEuros, previewText, previewVector
 const openai = new OpenAI(); // lee OPENAI_API_KEY y OPENAI_BASE_URL del entorno
 
 // Modelo de embedding: convierte texto en una lista de números (no genera texto).
-// "embed" es el alias del modelo de embedding en el servicio del curso.
-const EMBEDDING_MODEL = process.env.MODELO_EMBEDDING ?? "embed";
+const EMBEDDING_MODEL = process.env.MODELO_EMBEDDING ?? "text-embedding-3-small";
 
 const DOCS_DIR = new URL("../docs/", import.meta.url);
 

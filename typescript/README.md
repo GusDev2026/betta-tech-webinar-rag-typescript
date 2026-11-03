@@ -37,17 +37,23 @@ npm install
 npm run db        # arranca Postgres con pgvector (docker compose up -d --wait)
 ```
 
-Crea un `.env` en esta carpeta (nunca en el código):
+Copia `.env.example` a `.env` y pon tu clave de OpenAI (la creas en [platform.openai.com/api-keys](https://platform.openai.com/api-keys)). El `.env` está en el `.gitignore`: la clave nunca va en el código.
+
+```bash
+cp .env.example .env
+```
 
 ```
-OPENAI_API_KEY=<tu clave del curso>
-OPENAI_BASE_URL=https://ai.commitacademy.io/v1
-# Opcionales (por defecto, los alias del servicio del curso):
-# MODELO=fast                 # o smart, más capaz
-# MODELO_EMBEDDING=embed
+OPENAI_API_KEY=sk-...
+# Opcionales:
+# MODELO=gpt-5-mini                        # modelo de chat
+# MODELO_EMBEDDING=text-embedding-3-small  # modelo de embedding (1.536 dimensiones)
+# OPENAI_BASE_URL=https://...              # otro proveedor compatible con OpenAI
 # DATABASE_URL=postgres://rag:rag@localhost:5433/rag
-# USD_A_EUR=0.86              # tipo de cambio para mostrar el coste en euros
+# USD_A_EUR=0.86                           # tipo de cambio para mostrar el coste en euros
 ```
+
+Indexar los 103 documentos con `text-embedding-3-small` son unos 17.000 tokens: menos de un céntimo.
 
 ## Ejecutar
 
@@ -66,7 +72,7 @@ npm run chat -- --ver-contexto "¿Puedo pagar a plazos?"
 - `--busqueda bm25` o `--busqueda hibrida` cambia cómo se buscan los fragmentos (ver más abajo).
 - En la TUI: `/rag` activa o desactiva el RAG, `/busqueda hibrida` cambia el modo de búsqueda, `/k 5` cambia los fragmentos recuperados y `/salir` (o Ctrl+C) sale.
 
-El servicio del curso expone los modelos con alias: `fast` y `smart` para chat y `embed` para embeddings (también `rerank`, que no se usa aquí). Con otro proveedor compatible con OpenAI, pon sus nombres de modelo en `MODELO` y `MODELO_EMBEDDING`, por ejemplo `text-embedding-3-small`.
+Por defecto se usan modelos de OpenAI. Con otro proveedor compatible con la API de OpenAI (un proxy LiteLLM, Ollama, OpenRouter…), pon su URL en `OPENAI_BASE_URL` y sus nombres de modelo en `MODELO` y `MODELO_EMBEDDING`.
 
 Si cambias `MODELO_EMBEDDING`, vuelve a ejecutar `npm run indexar`: los vectores de modelos distintos no se pueden comparar. El índice HNSW de pgvector admite hasta 2.000 dimensiones; con un modelo de más dimensiones, `npm run indexar` fallará al crear el índice.
 
@@ -97,7 +103,7 @@ npm run similitud
 npm run similitud -- "¿Hacéis envíos a Portugal?" "Enviamos a todos los países de la Unión Europea"
 ```
 
-Calcula la similitud coseno con `embed` entre pares de frases parecidas, sin relación y "trampas": ¿cambia mucho el vector la negación ("quiero" frente a "no quiero devolver el pedido")? ¿Separa "banco" del parque y "banco" de cuentas? ¿Junta la misma frase en inglés y en español? Los modelos de embedding suelen fallar con la negación, pero compruébalo con el tuyo. Para cada par enseña también las palabras en común, que es lo único que vería BM25. No necesita la base de datos.
+Calcula la similitud coseno con el modelo de embedding entre pares de frases parecidas, sin relación y "trampas": ¿cambia mucho el vector la negación ("quiero" frente a "no quiero devolver el pedido")? ¿Separa "banco" del parque y "banco" de cuentas? ¿Junta la misma frase en inglés y en español? Los modelos de embedding suelen fallar con la negación, pero compruébalo con el tuyo. Para cada par enseña también las palabras en común, que es lo único que vería BM25. No necesita la base de datos.
 
 ## Cómo de bien funciona: el golden set
 
@@ -135,9 +141,9 @@ Los dos scripts muestran el coste en euros de cada llamada:
 - `indexar` muestra el coste de cada lote de embeddings y el total.
 - `chat` muestra, para cada pregunta, el coste de la búsqueda (el embedding de la pregunta), el de la respuesta y la suma.
 
-El coste no se calcula en el código. El servicio del curso (un proxy LiteLLM) informa del coste real de cada petición, en dólares, en la cabecera HTTP `x-litellm-response-cost`. Los scripts la leen con `.withResponse()` de la librería de OpenAI y la pasan a euros con `USD_A_EUR` (0,86 por defecto; ajústalo al cambio del día). Las funciones están en `log.ts`.
+El coste no se calcula en el código: se lee de la cabecera HTTP `x-litellm-response-cost`, en dólares, que envían los proxies [LiteLLM](https://docs.litellm.ai/) con el coste real de cada petición. Los scripts la leen con `.withResponse()` de la librería de OpenAI y la pasan a euros con `USD_A_EUR` (0,86 por defecto; ajústalo al cambio del día). Las funciones están en `log.ts`.
 
-Con otro proveedor que no envíe esa cabecera, verás "coste no informado".
+La API de OpenAI no envía esa cabecera, así que con ella verás "coste no informado". Los tokens sí se muestran siempre: multiplícalos por los [precios de OpenAI](https://openai.com/api/pricing/) para estimar el coste.
 
 ## Ver los datos en Postgres
 
@@ -160,5 +166,5 @@ Para parar la base de datos: `docker compose down`. Para borrarla también: `doc
 ## Límites, a propósito
 
 - Cada pregunta es independiente: no hay memoria de la conversación.
-- No se reordenan los resultados con un modelo de *reranking* (el servicio del curso tiene uno, `rerank`): es el siguiente paso después de la búsqueda híbrida.
+- No se reordenan los resultados con un modelo de *reranking*: es el siguiente paso después de la búsqueda híbrida.
 - El troceo por `## ` funciona porque los documentos están bien estructurados.
